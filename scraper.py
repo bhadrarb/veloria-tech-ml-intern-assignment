@@ -2,24 +2,17 @@ import pandas as pd
 import requests
 from bs4 import BeautifulSoup
 headers = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"}
-
+# Send request
 res=requests.get("https://www.howstat.com/Cricket/Statistics/IPL/SeriesMatches.asp?s=2026")
 print("status: ",res.status_code)
-#print(res.text[:1000])
 
+# Parse 
 soup=BeautifulSoup(res.text,"html.parser")
-
+# Get match table
 tables=soup.find_all("table")
 
 table=tables[3]
 match_rows=table.find_all("tr")
-#print(len(match_rows))
-"""for row in rows[1:11]:
-    cols=row.find_all("td")
-    print(cols[0].text)"""
-
-#cols=match_rows[3].find_all("td")
-
 
 data=[]
 for match_row in match_rows[3:13]:
@@ -29,10 +22,12 @@ for match_row in match_rows[3:13]:
     teams_text=cols[2].text.strip()
     venue=cols[3].text.strip()
     result=cols[4].text.strip()
+    # Split teams into team1 and team2
     if " v " in teams_text:
         team1,team2=teams_text.split(" v ", 1)
     else:
         team1,team2=teams_text, ""
+# Open scorecard page
     link=cols[5].find("a")
 
     scorecard_url = ("https://www.howstat.com/Cricket/Statistics/IPL/"+link["href"])
@@ -40,6 +35,7 @@ for match_row in match_rows[3:13]:
     score_soup=BeautifulSoup(score_res.text,"html.parser")
     score_tables=score_soup.find_all("table")
     players=[]
+# Extract batting data 
     for table_index in [5,7]:
         try:
             batting_table=score_tables[table_index]
@@ -59,8 +55,9 @@ for match_row in match_rows[3:13]:
         except IndexError:
             pass
     #print(players)
+# Find highest run scorer in the match
     top_scorer=max(players,key=lambda x:x[1])
-
+# Store  information
     data.append({
         "date":date,
         "team1":team1,
